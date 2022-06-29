@@ -105,7 +105,6 @@ list(APPEND REQUIRED_FEATURES
         cxx_variadic_templates # Variadic templates, as defined in N2242.
 )
 
-
 if(BUILD_SHARED_LIBS)
     if(CMAKE_VERSION VERSION_GREATER_EQUAL 3.12.0)
         add_compile_definitions(JSON_DLL_BUILD)
@@ -114,9 +113,16 @@ if(BUILD_SHARED_LIBS)
     endif()
 
     set(SHARED_LIB ${PROJECT_NAME}_lib)
+
+    if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+        set(SHARED_SUFFIX "d")
+    else()
+        set(SHARED_SUFFIX "")
+    endif()
+
     add_library(${SHARED_LIB} SHARED ${PUBLIC_HEADERS} ${JSONCPP_SOURCES})
     set_target_properties(${SHARED_LIB} PROPERTIES
-        OUTPUT_NAME jsoncpp
+        OUTPUT_NAME jsoncpp${SHARED_SUFFIX}
         VERSION ${PROJECT_VERSION}
         SOVERSION ${PROJECT_SOVERSION}
         POSITION_INDEPENDENT_CODE ${BUILD_SHARED_LIBS}
@@ -139,15 +145,26 @@ if(BUILD_SHARED_LIBS)
 endif()
 
 if(BUILD_STATIC_LIBS)
+
     set(STATIC_LIB ${PROJECT_NAME}_static)
     add_library(${STATIC_LIB} STATIC ${PUBLIC_HEADERS} ${JSONCPP_SOURCES})
 
     # avoid name clashes on windows as the shared import lib is alse named jsoncpp.lib
-    if(NOT DEFINED STATIC_SUFFIX AND BUILD_SHARED_LIBS)
-        if (MSVC)
-            set(STATIC_SUFFIX "_static")
-        else()
-            set(STATIC_SUFFIX "")
+    if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+        if(NOT DEFINED STATIC_SUFFIX AND BUILD_SHARED_LIBS)
+            if (MSVC)
+                set(STATIC_SUFFIX "d_static")
+            else()
+                set(STATIC_SUFFIX "")
+            endif()
+        endif()
+    else()
+        if(NOT DEFINED STATIC_SUFFIX AND BUILD_SHARED_LIBS)
+            if (MSVC)
+                set(STATIC_SUFFIX "_static")
+            else()
+                set(STATIC_SUFFIX "d")
+            endif()
         endif()
     endif()
 
